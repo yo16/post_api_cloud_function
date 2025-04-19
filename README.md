@@ -1,0 +1,2 @@
+# post_api_cloud_function
+GCPのCloudFunctionを使ったAPIサーバー（POST１つだけ）機能
