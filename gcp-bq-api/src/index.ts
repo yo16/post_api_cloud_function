@@ -7,41 +7,46 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Request, Response } from 'express';
 
 export const insertToBigQuery = async (req: Request, res: Response) => {
-    if (req.method !== 'POST') {
-        res.status(405).send('Method Not Allowed');
-        return;
-    }
+  // ★ CORS対応：プリフライト（OPTIONS）リクエスト
+  if (req.method === 'OPTIONS') {
+    res.set('Access-Control-Allow-Origin', 'https://kuronekotaiwan-matsuri.github.io');
+    res.set('Access-Control-Allow-Methods', 'POST');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(204).send('');
+    return;
+  }
 
-    const { uuid, stamp_id } = req.body;
-    if (!uuid || !stamp_id) {
-        res.status(400).json({ error: 'Missing required fields' });
-        return;
-    }
+  // ★ CORS対応：本リクエストにもヘッダー付与
+  res.set('Access-Control-Allow-Origin', '*');
 
-    const bigquery = new BigQuery();
-    const datasetId = 'stamp_card';
-    const tableId = 'stamped_log';
+  const { uuid, stamp_id } = req.body;
+  if (!uuid || !stamp_id) {
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
 
-    const rows = [{
-        insertId: uuidv4(),
-        json: {
-            uuid,
-            stamp_id,
-            stamped_at: new Date().toISOString(),
-        },
-    }];
+  const bigquery = new BigQuery();
+  const datasetId = 'stamp_card';
+  const tableId = 'stamped_log';
 
-    try {
-        const [response] = await bigquery
-            .dataset(datasetId)
-            .table(tableId)
-            .insert(
-                rows,
-                { raw: true, ignoreUnknownValues: true }
-            );
-        res.status(200).json({ status: 'ok', response });
-    } catch (err: any) {
-        console.error('Insert error:', err);
-        res.status(500).json({ status: 'error', error: err.message });
-    }
+  const rows = [{
+    insertId: uuidv4(),
+    json: {
+      uuid,
+      stamp_id,
+      stamped_at: new Date().toISOString(),
+    },
+  }];
+
+  try {
+    const [response] = await bigquery
+      .dataset(datasetId)
+      .table(tableId)
+      .insert(rows, { raw: true, ignoreUnknownValues: true });
+
+    res.status(200).json({ status: 'ok', response });
+  } catch (err: any) {
+    console.error('Insert error:', err);
+    res.status(500).json({ status: 'error', error: err.message });
+  }
 };
