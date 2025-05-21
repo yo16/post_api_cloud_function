@@ -19,7 +19,7 @@ export const insertToBigQuery = async (req: Request, res: Response) => {
   
   // ★ CORS対応：プリフライト（OPTIONS）リクエスト
   if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', 'https://kuronekotaiwan-matsuri.github.io');
+    //res.set('Access-Control-Allow-Origin', 'https://kuronekotaiwan-matsuri.github.io');
     res.set('Access-Control-Allow-Methods', 'POST');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
     res.status(204).send('');
@@ -29,8 +29,13 @@ export const insertToBigQuery = async (req: Request, res: Response) => {
   // ★ CORS対応：本リクエストにもヘッダー付与
   //res.set('Access-Control-Allow-Origin', '*');
 
+  //console.log("Content-Type:", req.headers['content-type']);
+  //console.log("Origin:", req.headers.origin);
+  //console.log("Request body:", req.body);
+
   const { uuid, stamp_id } = req.body;
   if (!uuid || !stamp_id) {
+    console.log("Missing required fields", uuid, stamp_id);
     res.status(400).json({ error: 'Missing required fields' });
     return;
   }
@@ -56,6 +61,7 @@ export const insertToBigQuery = async (req: Request, res: Response) => {
 
     res.status(200).json({ status: 'ok', response });
   } catch (err: any) {
+    console.log("Insert error:", err);
     console.error('Insert error:', err);
     res.status(500).json({ status: 'error', error: err.message });
   }
